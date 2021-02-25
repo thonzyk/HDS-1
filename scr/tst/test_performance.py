@@ -9,7 +9,7 @@ from termcolor import colored
 
 from fcn.processing import *
 
-COPY_PASTE_SCORE = 0.2252771767239405
+COPY_PASTE_SCORE = 0.3059463604477232
 LAST_FITNESS_NAME = "last_fitness.txt"
 
 
@@ -47,7 +47,7 @@ class TestPerformance(unittest.TestCase):
         f.close()
 
         # Compute the difference between outputs
-        vect = TfidfVectorizer(min_df=0, encoding="utf-8", lowercase=False, token_pattern="(.)")
+        vect = TfidfVectorizer(min_df=1, encoding="utf-8", lowercase=False, token_pattern="(.)")
         tfidf = vect.fit_transform([ground_truth, predict])
         pairwise_similarity = tfidf * tfidf.T
 

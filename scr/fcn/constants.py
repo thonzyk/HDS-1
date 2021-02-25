@@ -1,31 +1,36 @@
 EPA = "ieaouIEAOUyYFfvszSZxhlrRjPbtdDkgmnJcCwWNMGQPLH!@$#%"
 
-SIMPLE_MAP = {
-    'Y': 'i',
+# TODO-optimize: use regex for equivalent replacements
+SIMPLE_RULES = {
+
+    'ni': 'Ji',
+    'ní': 'JI',
+
     'y': 'i',
     'ý': 'I',
-    'Ý': 'I',
     'í': 'I',
     'é': 'E',
-    'É': 'E',
     'á': 'A',
-    'Á': 'A',
     'ó': 'O',
-    'Ó': 'O',
     'ú': 'U',
-    'Ú': 'U',
     'ů': 'U',
-    'Ů': 'U',
 
     'ou': 'y',
     'au': 'Y',
     'eu': 'F',
 
-    '\n': '\n|$|'
+    'š': 'S',
 
-}
+    'ň': 'J',
 
-PAUSE_MAP = {
+    '\n': '\n|$|',
+
+    'ch': 'x',
+    'x ': 'G ',
+    'x.': 'G.',
+    'x,': 'G,',
+    'x;': 'G;',
+
     '\t': '',
 
     '. ': '|$|',
@@ -37,4 +42,15 @@ PAUSE_MAP = {
     ',': '|#|',
 
     ' ': '|',
+
+    '|a': '|!a',
+    '|e': '|!e',
+    '|i': '|!i',
+    '|o': '|!o',
+    '|u': '|!u',
+
+}
+
+REGEX_RULES = {
+
 }
