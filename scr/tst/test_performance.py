@@ -1,7 +1,6 @@
-import unittest
-from difflib import SequenceMatcher
-
+"""Project performance tests"""
 import time
+import unittest
 
 import numpy as np
 from sklearn.feature_extraction.text import TfidfVectorizer
@@ -13,22 +12,27 @@ COPY_PASTE_SCORE = 0.3059463604477232
 LAST_FITNESS_NAME = "last_fitness.txt"
 
 
-def similar(a, b):
-    return SequenceMatcher(None, a, b).ratio()
-
-
 class TestPerformance(unittest.TestCase):
     """Tests the performance of the system."""
 
-    def test_speed(self):
-        """Tests how much time it takes to run algorithm on 1 MB file."""
-        start = time.time()
-        process_file(Path("../data/test/blabot.txt"))
-        end = time.time()
-        print(colored('\n\nRun time: {0} seconds'.format(end-start), 'cyan'))
+    def test_speed(self, numb_of_reps=10):
+        """Tests how much time it takes on average to run algorithm on 1 MB file."""
+
+        avg_time = 0.0
+
+        for i in range(numb_of_reps):
+            start = time.time()
+            process_file(Path("../data/test/blabot.txt"))
+            end = time.time()
+
+            avg_time += end - start
+
+        avg_time /= numb_of_reps
+
+        print(colored('\n\nExecute time: {0} seconds'.format(avg_time), 'cyan'))
 
     def test_accuracy(self):
-        """Tests the model accuracy."""
+        """Tests the algorithm accuracy."""
         process_file(Path("../data/train/ukazka_HDS.ortho.txt"))
 
         # Open ground truth output
