@@ -22,7 +22,7 @@ def simple_replacement(txt):
 
 
 def regex_replacement(txt):
-    """Repeats all replacements defined in ´REGEX_RULES´ until the syntax of the  phonetic transcription is correct."""
+    """Performs all replacements defined in ´REGEX_RULES´ dictionary."""
     for regex in REGEX_RULES:
         txt = re.sub(regex, REGEX_RULES[regex], txt)
 
@@ -30,18 +30,18 @@ def regex_replacement(txt):
 
 
 def chain_replacement(txt):
-    """Process the input text (backwards) character by character
-    and applies replacements based on the phonetic chain-type rules."""
+    """Finds all the occurrences of pair consonants chains and applies relevant replacements."""
 
+    # Create list-type copy of original text for swift character replacements
     list_txt = list(txt)
 
+    # Find all wanted chains
     matches = re.finditer(CHAIN_REGIONS_REGEX, txt)
-
     matches_positions = [(match.start(), match.end()) for match in matches]
 
+    # Process each chain
     for match in matches_positions:
         chain = txt[match[0]:match[1]]
-
         dominant_char = chain[-1]
 
         if dominant_char in RECESSIVE_CHARS:
