@@ -75,14 +75,17 @@ def translate(txt):
     return txt
 
 
-def process_file(file_path=Path("../data/test/vety_HDS.ortho.txt")):
+def process_file(input_path, output_path):
     """Creates file with the translation of the content of the input file."""
-    txt = load_text(file_path)
+    input_path = Path(input_path)
+
+    txt = load_text(input_path)
     txt = translate(txt)
 
-    # Build the output path
-    file_name = file_path.name.replace("ortho", "phntrn")
-    output_path = file_path.parent.parent / "output" / file_name
+    # If output path is not specified, it is build based on the input path
+    if output_path is None:
+        file_name = input_path.name.replace("ortho", "phntrn")
+        output_path = input_path.parent.parent / "output" / file_name
 
     # Save the output file
     with open(output_path, 'w', encoding='utf-8') as f:
