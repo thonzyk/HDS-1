@@ -4,7 +4,7 @@ import pickle as plk
 from scipy.io import wavfile
 import matplotlib
 from matplotlib import pyplot as plt
-from unitselection.fcn.inventory import load_inventory
+from unitselection.fcn.inventory_phoneme import load_inventory
 import random
 
 matplotlib.use('Qt5Agg')
@@ -39,7 +39,7 @@ if __name__ == '__main__':
 
     for chr in txt:
         variants = inv[chr]
-        variant = random.randint(0, len(variants))
+        variant = random.randint(0, len(variants) - 1)
         variant = variants[variant]
         phones.append(variant)
 

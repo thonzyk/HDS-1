@@ -1,10 +1,11 @@
-import os
-from unitselection.fcn.constants import *
-import pickle as plk
-from scipy.io import wavfile
-import matplotlib
-from matplotlib import pyplot as plt
 import bisect
+import os
+import pickle as plk
+
+import matplotlib
+from scipy.io import wavfile
+
+from unitselection.fcn.constants import *
 
 matplotlib.use('Qt5Agg')
 
@@ -51,7 +52,6 @@ def get_signal_cut(signal, sample_time, start, stop, pms):
     :param pms: pitch marks list
     :return: subsignal cut out of the original signal based on the given time window corrected by the pitch marks.
     """
-    # TODO-critical: add pitch mark correction
 
     pm_start_i = bisect.bisect_right(pms, (start,))
     start_pm = pms[pm_start_i][0]
@@ -80,6 +80,18 @@ def add_fade(signal, window):
     return signal
 
 
+def get_phonem(line):
+    line = line[:-1]
+    items = line.split(' ')
+    start = float(items[0]) * TIME_STEP
+    stop = float(items[1]) * TIME_STEP
+    center = (start + stop) / 2
+
+    phoneme = items[2]
+
+    return phoneme, start, stop, center
+
+
 def create_inventory(mlf_dir, pm_dir, spc_dir, inv_f_name):
     _, _, mlf_files = next(os.walk(mlf_dir))
 
@@ -96,29 +108,34 @@ def create_inventory(mlf_dir, pm_dir, spc_dir, inv_f_name):
             sample_rate, signal = wavfile.read(DATA_DIR / SPC / "Sentence00001.wav")
 
         signal = signal.astype('float32')
-        # sample_time = 1.0 / sample_rate
-        # min_length = 2 * FADE_TIME * sample_rate
-        # window = np.hanning(min_length)
         pms = get_pitch_marks(pm_dir / pm_name)
 
         with open(mlf_dir / mlf_f_name, 'r', encoding='utf-8') as mlf_f:
+            last_phoneme = '$'
+            last_center = 0.0
+
             for line in mlf_f:
-                line = line[:-1]
-                items = line.split(' ')
-                start = int(items[0]) * TIME_STEP
-                stop = int(items[1]) * TIME_STEP
-                phonem = items[2]
-                signal_cut = get_signal_cut(signal, SAMPLE_TIME, start, stop, pms)
+                phoneme, start, stop, center = get_phonem(line)
+
+                if stop - start > MAX_PHONEME_LEN_SEC:
+                    last_phoneme = phoneme
+                    last_center = center
+                    continue
+
+                signal_cut = get_signal_cut(signal, SAMPLE_TIME, last_center, center, pms)
+
+                diphone = last_phoneme + phoneme
+                last_phoneme = phoneme
+                last_center = center
 
                 if len(signal_cut) <= MIN_LENGTH:
+                    last_phoneme = phoneme
+                    last_center = center
                     continue
 
                 signal_cut = add_fade(signal_cut, WINDOW)
 
-                # if phonem not in inv:
-                #     inv[phonem] = []
-
-                inv[phonem].append(signal_cut)
+                inv[diphone].append(signal_cut)
 
     with open(DATA_DIR / PREP / "inventory.plk", 'wb') as fw:
         plk.dump(inv, fw)

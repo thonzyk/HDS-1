@@ -4,7 +4,7 @@ from unitselection.fcn.constants import *
 from scipy.io import wavfile
 import matplotlib
 from matplotlib import pyplot as plt
-from unitselection.fcn.inventory import load_inventory
+from unitselection.fcn.inventory_phoneme import load_inventory
 
 matplotlib.use('Qt5Agg')
 
@@ -59,12 +59,19 @@ def analyse_phones_lengths():
 
     lengths = []
 
+    corrupted_chars = []
+
     for key in inv:
         lst = inv[key]
         for signal in lst:
             length = len(signal) * 6.25e-05
-            if length < 1.0:
-                lengths.append(length)
+            # if length < 1.0:
+            lengths.append(length)
+
+            if 0.25 < length < 0.5:
+                corrupted_chars.append(key)
+
+    corrupted_chars = list(set(corrupted_chars))
 
     print("max: " + str(max(lengths)))
     print("min: " + str(min(lengths)))
@@ -74,4 +81,4 @@ def analyse_phones_lengths():
 
 
 if __name__ == '__main__':
-    check_wav()
+    analyse_phones_lengths()
