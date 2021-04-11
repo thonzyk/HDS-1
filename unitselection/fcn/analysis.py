@@ -4,7 +4,7 @@ from unitselection.fcn.constants import *
 from scipy.io import wavfile
 import matplotlib
 from matplotlib import pyplot as plt
-from unitselection.fcn.inventory_phoneme import load_inventory
+from unitselection.fcn.inventory_diphone import load_inventory
 
 matplotlib.use('Qt5Agg')
 

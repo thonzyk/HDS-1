@@ -4,7 +4,7 @@ import pickle as plk
 from scipy.io import wavfile
 import matplotlib
 from matplotlib import pyplot as plt
-from unitselection.fcn.inventory_phoneme import load_inventory
+from unitselection.fcn.inventory_diphone import load_inventory
 import random
 
 matplotlib.use('Qt5Agg')
@@ -23,26 +23,66 @@ def concat_phones(phones):
     for phone in phones:
         sound_i += len(phone)
         sound[prev_sound_i:sound_i] += phone
-        # sound_i -= FADE_LEN
+        sound_i -= FADE_LEN
         prev_sound_i = sound_i
 
     return sound.astype('int16')
 
 
+def to_diphones(sentence):
+    new_sentence = []
+
+    last_phoneme = sentence[0]
+
+    for phoneme in sentence[1:]:
+        diphone = last_phoneme + phoneme
+        last_phoneme = phoneme
+        new_sentence.append(diphone)
+
+    return new_sentence
+
+
+def get_best_sequence(sentence, inv):
+    sequence = []
+    for diphone in sentence:
+        if diphone not in inv:
+            print("missing diphone")
+            continue
+
+        variants = inv[diphone]
+        variant = random.randint(0, len(variants) - 1)
+        variant = variants[variant]
+        sequence.append(variant.signal)
+
+    return sequence
+
+
 if __name__ == '__main__':
     inv = load_inventory()
 
-    txt = "|$|sykromI|lEkaRi|si|tak|sTeZujI|na|situaci|#|gdi|jim|rosty|pQedefSIm|nAkladi|na|!energiji|!a|zAroveJ|jim|stAt|reguluje|ceni|$|"
+    txt = "$TImpQecetkiJesenAtu!okresJIhosyduf!uherskEmhraDiSTiradomIraveselA!odUvoDJila#!osvobozeJIdevjetasedmdesATiletEhovlaDimIrazavaDilIka$"
     txt = txt.replace('|', '')
 
-    phones = []
+    diphones = to_diphones(txt)
 
-    for chr in txt:
-        variants = inv[chr]
-        variant = random.randint(0, len(variants) - 1)
-        variant = variants[variant]
-        phones.append(variant)
+    sequence = get_best_sequence(diphones, inv)
 
-    sound = concat_phones(phones)
+    # phones = []
+    #
+    # last_chr = '$'
+    #
+    # for chr in txt:
+    #     diphone = last_chr + chr
+    #     if diphone not in inv:
+    #         last_chr = chr
+    #         print("missing diphone")
+    #         continue
+    #     variants = inv[diphone]
+    #     last_chr = chr
+    #     variant = random.randint(0, len(variants) - 1)
+    #     variant = variants[variant]
+    #     phones.append(variant.signal)
+
+    sound = concat_phones(sequence)
 
     wavfile.write(DATA_DIR / OUT / "TEST.wav", SAMPLE_RATE, sound)

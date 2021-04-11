@@ -4,6 +4,9 @@ import pickle as plk
 
 import matplotlib
 from scipy.io import wavfile
+from matplotlib import pyplot as plt
+
+from unitselection.fcn.speech_unit import SpeechUnit
 
 from unitselection.fcn.constants import *
 
@@ -22,8 +25,13 @@ def get_pitch_marks(pm_f_name):
                 line = line[1:]
             line = line[:-1]
             items = line.split(' ')
-            time = float(items[0])
+
             typ = items[-1]
+            if typ == 'T':
+                continue
+
+            time = float(items[0])
+
             pms.append((time, typ))
 
     return pms
@@ -43,39 +51,39 @@ def get_index_in_signal(signal, moment, sample_rate):
     """
 
 
-def get_signal_cut(signal, sample_time, start, stop, pms):
+def get_signal_cut(signal, start, stop):
     """
     :param signal: 1D ndarray representing the signal amplitude time series
     :param sample_time: signal sample time [second]
     :param start: start of the cut time [seconds]
     :param stop: start of the cut time [seconds]
-    :param pms: pitch marks list
     :return: subsignal cut out of the original signal based on the given time window corrected by the pitch marks.
     """
 
-    pm_start_i = bisect.bisect_right(pms, (start,))
-    start_pm = pms[pm_start_i][0]
-
-    pm_stop_i = bisect.bisect_right(pms, (stop,))
-    stop_pm = pms[pm_stop_i][0]
-
-    start_i = round(start_pm / sample_time)
-    stop_i = round(stop_pm / sample_time)
+    start_i = round(start / SAMPLE_TIME)
+    stop_i = round(stop / SAMPLE_TIME)
 
     return signal[start_i:stop_i]
 
 
-def add_fade(signal, window):
+def nearest_pitchmark(pms, time):
+    pm_time_i = bisect.bisect_right(pms, (time,))
+    time_pm = pms[pm_time_i][0]
+
+    return time_pm
+
+
+def add_fade(signal):
     """
     :param signal: 1D ndarray representing the signal amplitude time series
     :param signal: window used to perform fade
     :return: signal with fade-in and fade-out regions
     """
 
-    win_half = len(window) // 2
+    win_half = len(WINDOW) // 2
 
-    signal[:win_half] *= window[:win_half]
-    signal[-win_half:] *= window[-win_half:]
+    signal[:win_half] *= WINDOW[:win_half]
+    signal[-win_half:] *= WINDOW[-win_half:]
 
     return signal
 
@@ -92,13 +100,37 @@ def get_phonem(line):
     return phoneme, start, stop, center
 
 
+def get_sentence(mlf_f_name, pms):
+    sentence = []
+
+    with open(mlf_f_name, 'r', encoding='utf-8') as mlf_f:
+
+        first_line = True
+
+        for line in mlf_f:
+            if first_line:
+                last_phoneme = '$'
+                last_center = 0.0
+                first_line = False
+                continue
+
+            phoneme, start, stop, center = get_phonem(line)
+
+            center = nearest_pitchmark(pms, center)
+
+            sentence.append((last_phoneme + phoneme, last_center, center))
+            last_center = center
+            last_phoneme = phoneme
+
+    return sentence
+
+
 def create_inventory(mlf_dir, pm_dir, spc_dir, inv_f_name):
     _, _, mlf_files = next(os.walk(mlf_dir))
 
     inv = dict()
 
-    for chr in ALPHABET:
-        inv[chr] = []
+    NNN = 0
 
     for mlf_f_name in mlf_files:
         pm_name = mlf_f_name[:-4] + ".pm"
@@ -110,34 +142,70 @@ def create_inventory(mlf_dir, pm_dir, spc_dir, inv_f_name):
         signal = signal.astype('float32')
         pms = get_pitch_marks(pm_dir / pm_name)
 
-        with open(mlf_dir / mlf_f_name, 'r', encoding='utf-8') as mlf_f:
-            last_phoneme = '$'
-            last_center = 0.0
+        sentence = get_sentence(mlf_dir / mlf_f_name, pms)
 
-            for line in mlf_f:
-                phoneme, start, stop, center = get_phonem(line)
+        i = 0
 
+        for diphone, start, stop in sentence:
+            signal_cut = get_signal_cut(signal, start, stop)
+            if len(signal_cut) <= MIN_LENGTH:
+                i += 1
+                continue
 
-                if stop - start > MAX_PHONEME_LEN_SEC:
+            signal_cut = add_fade(signal_cut)
 
-                    last_phoneme = phoneme
-                    last_center = center
-                    continue
+            sp_unit = SpeechUnit(signal_cut)
 
-                signal_cut = get_signal_cut(signal, SAMPLE_TIME, last_center, center, pms)
+            if i > 0:
+                left_diphone, _, _ = sentence[i - 1]
+                sp_unit.left_unit = left_diphone
+            if i < len(sentence) - 1:
+                right_diphone, _, _ = sentence[i + 1]
+                sp_unit.right_unit = right_diphone
 
-                diphone = last_phoneme + phoneme
-                last_phoneme = phoneme
-                last_center = center
+            if diphone not in inv:
+                inv[diphone] = []
 
-                if len(signal_cut) <= MIN_LENGTH:
-                    last_phoneme = phoneme
-                    last_center = center
-                    continue
+            inv[diphone].append(sp_unit)
 
-                signal_cut = add_fade(signal_cut, WINDOW)
+            i += 1
 
-                inv[diphone].append(signal_cut)
+        # with open(mlf_dir / mlf_f_name, 'r', encoding='utf-8') as mlf_f:
+        #     last_phoneme = '$'
+        #     last_center = 0.0
+        #
+        #     for line in mlf_f:
+        #         phoneme, start, stop, center = get_phonem(line)
+        #
+        #         center = nearest_pitchmark(pms, center)
+        #
+        #         # if stop - start > MAX_PHONEME_LEN_SEC:
+        #         #     last_phoneme = phoneme
+        #         #     last_center = center
+        #         #     continue
+        #
+        #         signal_cut = get_signal_cut(signal, SAMPLE_TIME, last_center, center)
+        #
+        #         diphone = last_phoneme + phoneme
+        #         last_phoneme = phoneme
+        #         last_center = center
+        #
+        #         if len(signal_cut) <= MIN_LENGTH:
+        #             last_phoneme = phoneme
+        #             last_center = center
+        #             continue
+        #
+        #         signal_cut = add_fade(signal_cut)
+        #
+        #         if diphone not in inv:
+        #             inv[diphone] = []
+        #
+        #         inv[diphone].append(SpeechUnit(signal_cut))
+
+        NNN += 1
+
+        if NNN > 1:
+            break
 
     with open(DATA_DIR / PREP / "inventory.plk", 'wb') as fw:
         plk.dump(inv, fw)
