@@ -6,6 +6,14 @@ DATA_DIR = Path("D:/ML-Data/hds_data/")
 ALPHABET = ['$', 'T', 'I', 'm', 'p', 'Q', 'e', 'c', 't', 'k', 'i', 'J', 's', 'n', 'A', 'u', '!', 'o', 'r', 'h', 'y',
             'd', 'f', 'E', 'a', 'D', 'S', 'v', 'l', 'U', '#', 'b', 'z', 'j', 'C', 'Z', 'g', '%', 'R', 'N', 'x', 'O',
             'w', 'Y', 'F', 'W', 'M']
+
+SIMILARITY = [
+    ['aeiouAEIOU', 'bdDgvzZhwWR', 'ptTkfsSxcCQ', 'mnNljr'],
+    ['yYFuU', 'xGh'],
+    ['iI', 'eE', 'aA', 'oO', 'uU', 'sz', 'ZS', 'xG', 'fv', 'bp', 'td', 'DT', 'gk', 'mn', 'Jj', 'Nn', 'mMH', '$#%']
+]
+SIMILARITY_LOSS = [0.75, 0.5, 0.25]
+
 PM = "pm"
 SPC = "spc"
 MLF = "mlf"
@@ -21,7 +29,6 @@ ORIG_MLF = "phnalign.mlf"
 TIME_STEP = 1.0e-7
 
 FADE_TIME = 0.01
-
 
 SAMPLE_RATE = 16000
 SAMPLE_TIME = 1.0 / SAMPLE_RATE
