@@ -42,36 +42,40 @@ def to_diphones(sentence):
     return new_sentence
 
 
-def get_best_sequence(sentence, inv):
+def get_best_sequence(sentence, inv, phonemes_sim):
     return get_optimal_signal(sentence, inv, phonemes_sim)
 
-    # sequence = []
-    # for diphone in sentence:
-    #     if diphone not in inv:
-    #         print("missing diphone")
-    #         continue
-    #
-    #     variants = inv[diphone]
-    #     variant = random.randint(0, len(variants) - 1)
-    #     variant = variants[variant]
-    #     sequence.append(variant.signal)
-    #
-    # return sequence
 
-
-if __name__ == '__main__':
+def testing():
     inv = load_inventory(DATA_DIR / PREP)
     phonemes_sim = load_phonemes_sim(DATA_DIR / PREP)
 
-    txt = "|$|sakra|#|Wimi|#|tohle|je|kAva|!opravdovejG|znalcU|nAm|bi|s|vincentem|bejvalo|staCilo|!obiCejnI|granulovanI|kafe|!a|!on|na|nAs|vitAhne|tuhle|gurmAnsky|specialitu|$|"
+    # txt = "|$|sakra|#|Wimi|#|tohle|je|kAva|!opravdovejG|znalcU|nAm|bi|s|vincentem|bejvalo|staCilo|!obiCejnI|granulovanI|kafe|!a|!on|na|nAs|vitAhne|tuhle|gurmAnsky|specialitu|$|"
+    txt = "koNomPd"
 
     txt = txt.replace('|', '')
     txt = txt.replace('#', '')
 
     diphones = to_diphones(txt)
 
-    sequence = get_best_sequence(diphones, inv)
-
+    sequence = get_best_sequence(diphones, inv, phonemes_sim)
     sound = concat_phones(sequence)
-
     wavfile.write(DATA_DIR / OUT / "TEST.wav", SAMPLE_RATE, sound)
+
+
+if __name__ == '__main__':
+    inv = load_inventory(DATA_DIR / PREP)
+    phonemes_sim = load_phonemes_sim(DATA_DIR / PREP)
+
+    with open("C:/Users/tomas/Documents/FAV/HDS/semestralky/1/reseni/HDS-1/phonetrans/data/output/vety_HDS.phntrn.txt",
+              'r') as fr:
+        lines = fr.read().splitlines()
+        for i, line in enumerate(lines):
+            line = line.replace('|', '')
+            line = line.replace('#', '')
+            diphones = to_diphones(line)
+
+            sequence = get_best_sequence(diphones, inv, phonemes_sim)
+            sound = concat_phones(sequence)
+            f_name = str(i).zfill(4) + ".wav"
+            wavfile.write(DATA_DIR / OUT / f_name, SAMPLE_RATE, sound)
