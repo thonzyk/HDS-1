@@ -128,19 +128,71 @@ def get_sentence(mlf_f_name, pms):
     return sentence
 
 
-def create_inventory(mlf_dir, pm_dir, spc_dir, inv_f_name):
+def load_unsel_feats(dir, sent_name):
+    enrg_name = sent_name + ".enrg.txt"
+    f0_name = sent_name + ".f0.txt"
+    mfcc_name = sent_name + ".mfcc.txt"
+
+    enrg = []
+    f0 = []
+    mfcc = []
+
+    with open(dir / enrg_name, 'r') as fr:
+        for line in fr:
+            if line[0] != '|':
+                continue
+            line = line[:-1].replace(' ', '')
+            items = line.split('|')
+            enrg.append((float(items[1]), float(items[3])))
+
+    with open(dir / f0_name, 'r') as fr:
+        for line in fr:
+            if line[0] != '|':
+                continue
+            line = line[:-1].replace(' ', '')
+            items = line.split('|')
+            f0.append((float(items[1]), float(items[3])))
+
+    with open(dir / mfcc_name, 'r') as fr:
+        for line in fr:
+            if line[0] != '|':
+                continue
+            line = line[:-1].replace(' ', '')
+            items = line.split('|')
+            items = tuple([float(el) for el in items[1:-1]])
+            mfcc.append(items)
+
+    return enrg, f0, mfcc
+
+
+def get_unsel_feats(t, enrg, f0, mfcc):
+    enrg_i = bisect.bisect_right(enrg, (t,))
+    enrg_in_time = enrg[enrg_i][1]
+
+    f0_i = bisect.bisect_right(f0, (t,))
+    f0_in_time = f0[f0_i][1]
+
+    mfcc_i = bisect.bisect_right(mfcc, (t,))
+    mfcc_in_time = mfcc[mfcc_i][1:]
+
+    return enrg_in_time, f0_in_time, mfcc_in_time
+
+
+def create_inventory(mlf_dir, pm_dir, spc_dir, inv_f_name, unsel_feats_dir):
     _, _, mlf_files = next(os.walk(mlf_dir))
 
     inv = dict()
 
     for mlf_f_name in mlf_files:
-        pm_name = mlf_f_name[:-4] + ".pm"
-        spc_name = mlf_f_name[:-4] + ".wav"
+        sent_name = mlf_f_name[:-4]
+        pm_name = sent_name + ".pm"
+        spc_name = sent_name + ".wav"
 
-        sample_rate, signal = wavfile.read(DATA_DIR / SPC / spc_name)
-
+        sample_rate, signal = wavfile.read(spc_dir / spc_name)
         signal = signal.astype('float32')
+
         pms = get_pitch_marks(pm_dir / pm_name)
+        enrg, f0, mfcc = load_unsel_feats(unsel_feats_dir, sent_name)
 
         sentence = get_sentence(mlf_dir / mlf_f_name, pms)
 
@@ -153,8 +205,12 @@ def create_inventory(mlf_dir, pm_dir, spc_dir, inv_f_name):
                 continue
 
             signal_cut = add_fade(signal_cut)
+            enrg_start, f0_start, mfcc_start = get_unsel_feats(start, enrg, f0, mfcc)
+            enrg_stop, f0_stop, mfcc_stop = get_unsel_feats(stop, enrg, f0, mfcc)
 
-            sp_unit = SpeechUnit(signal_cut)
+            sp_unit = SpeechUnit(signal_cut, enrg_start, enrg_stop, f0_start, f0_stop, mfcc_start, mfcc_stop)
+
+            sp_unit.sentence_position = i / len(sentence)
 
             if i > 0:
                 left_diphone, _, _ = sentence[i - 1]
@@ -170,9 +226,6 @@ def create_inventory(mlf_dir, pm_dir, spc_dir, inv_f_name):
 
             i += 1
 
-    # for key in inv:
-    #     random.shuffle(inv[key])
-
     with open(inv_f_name / "inventory.plk", 'wb') as fw:
         plk.dump(inv, fw)
 
@@ -184,6 +237,9 @@ def create_inventory(mlf_dir, pm_dir, spc_dir, inv_f_name):
 
 def get_phonemes_similarity():
     phonemes_sim = dict()
+
+    for phon_1 in ALPHABET:
+        phonemes_sim[(phon_1, None)] = 2.0
 
     for phon_1 in ALPHABET:
         for phon_2 in ALPHABET:
@@ -267,7 +323,8 @@ if __name__ == '__main__':
     pm_dir = DATA_DIR / PM
     spc_dir = DATA_DIR / SPC
     inv_dir = DATA_DIR / PREP
+    unsel_feats_dir = DATA_DIR / UNS_FT
 
-    create_inventory(mlf_dir, pm_dir, spc_dir, inv_dir)
+    create_inventory(mlf_dir, pm_dir, spc_dir, inv_dir, unsel_feats_dir)
 
     # analyse_phones_lengths()

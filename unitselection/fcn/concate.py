@@ -14,7 +14,6 @@ matplotlib.use('Qt5Agg')
 def concat_phones(phones):
     phon_lens = [len(element) for element in phones]
     total_len = sum(phon_lens)
-    # total_len -= int((MIN_LENGTH * (len(phones) - 1)) // 2)
 
     sound = np.zeros((total_len,))
 
@@ -64,9 +63,10 @@ if __name__ == '__main__':
     inv = load_inventory(DATA_DIR / PREP)
     phonemes_sim = load_phonemes_sim(DATA_DIR / PREP)
 
-    txt = "|$|nejCasTejSIm|je|sluneCJI|zAReJI|#|Skodlivini|v|!ovzduSI|#|kyReJI|#|!alkohol|!a|SpatnA|ZivotosprAva|$|"
+    txt = "|$|sakra|#|Wimi|#|tohle|je|kAva|!opravdovejG|znalcU|nAm|bi|s|vincentem|bejvalo|staCilo|!obiCejnI|granulovanI|kafe|!a|!on|na|nAs|vitAhne|tuhle|gurmAnsky|specialitu|$|"
 
     txt = txt.replace('|', '')
+    txt = txt.replace('#', '')
 
     diphones = to_diphones(txt)
 

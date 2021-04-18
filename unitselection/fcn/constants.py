@@ -8,8 +8,8 @@ ALPHABET = ['$', 'T', 'I', 'm', 'p', 'Q', 'e', 'c', 't', 'k', 'i', 'J', 's', 'n'
             'w', 'Y', 'F', 'W', 'M']
 
 SIMILARITY = [
-    ['aeiouAEIOU', 'bdDgvzZhwWR', 'ptTkfsSxcCQ', 'mnNljr'],
-    ['yYFuU', 'xGh'],
+    ['aeiouAEIOUyYF', 'bdDgvzZhwWR', 'ptTkfsSxcCQ', 'mnNljr'],
+    ['yYFuU', 'xGh', 'Ya', 'oy', 'eF'],
     ['iI', 'eE', 'aA', 'oO', 'uU', 'sz', 'ZS', 'xG', 'fv', 'bp', 'td', 'DT', 'gk', 'mn', 'Jj', 'Nn', 'mMH', '$#%']
 ]
 SIMILARITY_LOSS = [0.75, 0.5, 0.25]
