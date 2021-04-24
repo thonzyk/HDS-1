@@ -4,9 +4,9 @@ import os
 from pathlib import Path
 
 from phonetrans.fcn.processing import transcribe_file
-from fcn.concate import synthetize_speech
-from fcn.constants import *
-from fcn.inventory_diphone import inventory_create
+from unitselection.fcn.concate import synthetize_speech
+from unitselection.fcn.constants import *
+from unitselection.fcn.inventory_diphone import inventory_create
 
 parser = argparse.ArgumentParser()
 parser.add_argument('input', metavar='INPUT', type=str, help='Input file with written czech text')

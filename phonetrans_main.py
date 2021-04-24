@@ -1,7 +1,7 @@
 """Project main script"""
 import argparse
 
-from fcn.processing import transcribe_file
+from phonetrans.fcn.processing import transcribe_file
 
 parser = argparse.ArgumentParser()
 parser.add_argument('input', metavar='INPUT', type=str, help='Input file with written czech text')

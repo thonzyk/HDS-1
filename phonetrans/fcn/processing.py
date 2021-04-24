@@ -75,7 +75,7 @@ def translate(txt):
     return txt
 
 
-def process_file(input_path, output_path):
+def transcribe_file(input_path, output_path):
     """Creates file with the translation of the content of the input file."""
     input_path = Path(input_path)
 
